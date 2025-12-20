@@ -1,3 +1,5 @@
+import { Node } from "./Node";
+
 export class Graph 
 {
     constructor()

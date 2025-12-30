@@ -1,4 +1,4 @@
-import { Graph } from "./models/Graph";
+import { Graph } from "./models/Graph.js";
 
 // create the graph instance
 const graph = new Graph

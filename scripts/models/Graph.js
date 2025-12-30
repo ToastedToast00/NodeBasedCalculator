@@ -56,49 +56,50 @@ export class Graph
         //deletes the node
         this.nodes.delete(nodeId);
     }
+
+    connectNodes(outNodeId, outPort, inNodeId, inPort) {;
+    const outNode = this.nodes.get(outNodeId);
+    const inNode = this.nodes.get(inNodeId);
+
+    if (!outNode || !inNode) {
+        throw new Error("One or both nodes do not exist.");
+    }
+
+    // 1. Validate ports exist
+    if (!(outPort in outNode.outputs)) {
+        throw new Error(`Output port '${outPort}' does not exist on node ${outNodeId}`);
+    }
+
+    if (!(inPort in inNode.inputs)) {
+        throw new Error(`Input port '${inPort}' does not exist on node ${inNodeId}`);
+    }
+
+    // 2. Validate type compatibility
+    const outType = outNode.outputs[outPort].type;
+    const inType = inNode.inputs[inPort].type;
+
+    if (outType !== inType) {
+        throw new Error(`Type mismatch: ${outType} → ${inType} is not allowed.`);
+    }
+
+    // 3. Prevent circular connections
+    if (this._createsCycle(outNodeId, inNodeId)) {
+        throw new Error("Connection would create a circular dependency.");
+    }
+
+    // 4. Add connection to both nodes
+    outNode.connectionsOut.push({ toNodeId: inNodeId, toPort: inPort });
+    inNode.connectionsIn.push({ fromNodeId: outNodeId, fromPort: outPort });
+
+    // 5. Add to global connection list
+    this.connections.push({
+        fromNodeId: outNodeId,
+        fromPort: outPort,
+        toNodeId: inNodeId,
+        toPort: inPort
+    });
+
+    return true;
+    }
 }
 
-connectNodes(outNodeId, outPort, inNodeId, inPort) {
-  const outNode = this.nodes.get(outNodeId);
-  const inNode = this.nodes.get(inNodeId);
-
-  if (!outNode || !inNode) {
-    throw new Error("One or both nodes do not exist.");
-  }
-
-  // 1. Validate ports exist
-  if (!(outPort in outNode.outputs)) {
-    throw new Error(`Output port '${outPort}' does not exist on node ${outNodeId}`);
-  }
-
-  if (!(inPort in inNode.inputs)) {
-    throw new Error(`Input port '${inPort}' does not exist on node ${inNodeId}`);
-  }
-
-  // 2. Validate type compatibility
-  const outType = outNode.outputs[outPort].type;
-  const inType = inNode.inputs[inPort].type;
-
-  if (outType !== inType) {
-    throw new Error(`Type mismatch: ${outType} → ${inType} is not allowed.`);
-  }
-
-  // 3. Prevent circular connections
-  if (this._createsCycle(outNodeId, inNodeId)) {
-    throw new Error("Connection would create a circular dependency.");
-  }
-
-  // 4. Add connection to both nodes
-  outNode.connectionsOut.push({ toNodeId: inNodeId, toPort: inPort });
-  inNode.connectionsIn.push({ fromNodeId: outNodeId, fromPort: outPort });
-
-  // 5. Add to global connection list
-  this.connections.push({
-    fromNodeId: outNodeId,
-    fromPort: outPort,
-    toNodeId: inNodeId,
-    toPort: inPort
-  });
-
-  return true;
-}
